@@ -1,7 +1,10 @@
 import logging
+import smtplib
+import ssl
 import sys
+import traceback
+from email.message import EmailMessage
 from logging.handlers import RotatingFileHandler
-from typing import Set
 
 import requests
 
@@ -10,6 +13,23 @@ IMMICH_URL: str = "http://localhost:2283"  # IF RUNNING ON HOST WITH DEFAULT POR
 API_KEY: str = "YOUR-API-KEY"  # REPLACE WITH YOUR API KEY
 ALBUM_NAME: str = "Favorites"
 LOG_FILE_PATH: str = "favorite_album_sync.log"
+
+# Email on error configuration
+# Toggle email notifications for unhandled exceptions
+ENABLE_EMAIL_ON_ERROR: bool = (
+    True  # Set to True to enable sending emails on unhandled exceptions
+)
+
+# Gmail SMTP settings (for Gmail use smtp.gmail.com and port 465 with SSL)
+# NOTE: For Gmail you should use an app password (not your account password) if 2FA is enabled.
+EMAIL_SMTP_SERVER: str = "smtp.gmail.com"
+EMAIL_SMTP_PORT: int = 465  # SSL port
+EMAIL_USERNAME: str = "your.email@gmail.com"  # Gmail address
+EMAIL_PASSWORD: str = (
+    "your_app_password"  # Use an app password (do NOT commit real credentials)
+)
+EMAIL_FROM: str = EMAIL_USERNAME
+EMAIL_TO: str = "recipient@example.com"
 # ---------------------
 
 # Configure logging
@@ -23,6 +43,35 @@ logging.basicConfig(
 )
 
 HEADERS: dict[str, str] = {"x-api-key": API_KEY, "Accept": "application/json"}
+
+
+def send_error_email(exc: Exception) -> None:
+    """Send an email containing the exception traceback. Uses the Gmail SMTP settings above."""
+    if not ENABLE_EMAIL_ON_ERROR:
+        return
+
+    try:
+        tb = traceback.format_exc()
+        subject = f"[Favorite Album Sync] Unhandled exception: {type(exc).__name__}"
+        body = f"An unhandled exception occurred in Favorite_album_sync.py:\n\nException: {exc}\n\nTraceback:\n{tb}"
+
+        msg = EmailMessage()
+        msg["From"] = EMAIL_FROM
+        msg["To"] = EMAIL_TO
+        msg["Subject"] = subject
+        msg.set_content(body)
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(
+            EMAIL_SMTP_SERVER, EMAIL_SMTP_PORT, context=context
+        ) as server:
+            server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+            server.send_message(msg)
+
+        logging.info("Error notification email sent successfully.")
+
+    except Exception:
+        logging.error("Failed to send error notification email.", exc_info=True)
 
 
 def get_all_favorite_asset_ids() -> set[str]:
@@ -136,6 +185,12 @@ def main() -> None:
 
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}", exc_info=True)
+        # Send email notification if enabled
+        try:
+            send_error_email(e)
+        except Exception:
+            # send_error_email already logs failures; avoid raising from the global exception handler
+            pass
 
 
 if __name__ == "__main__":
