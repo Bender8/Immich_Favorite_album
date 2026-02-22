@@ -1,8 +1,8 @@
 import requests
 
 # --- Configuration ---
-IMMICH_URL = "http://localhost:2283"
-API_KEY = "yaWLQ6BYtcvsKpJH29H2pQ9HMSzXDTGTGRi27NGoA"
+IMMICH_URL = "http://localhost:2283"  # IF RUNNING ON HOST WITH DEFAULT PORT NO CHANGE NEEDE, ELSE SET YOUR IMMICH IP
+API_KEY = "YOUR-API-KEY"  # REPLACE WITH YOUR API KEY
 ALBUM_NAME = "Favorites"
 # ---------------------
 
@@ -18,14 +18,19 @@ def get_all_favorite_asset_ids():
             "isFavorite": True,
             "page": page,
             "size": page_size,
-            }
-        response = requests.post(f"{IMMICH_URL}/api/search/metadata", headers=HEADERS, json=payload, verify=False)
+        }
+        response = requests.post(
+            f"{IMMICH_URL}/api/search/metadata",
+            headers=HEADERS,
+            json=payload,
+            verify=False,
+        )
         response.raise_for_status()
         # Access the nested 'assets' -> 'items' path
-        items = response.json().get('assets', {}).get('items', [])
+        items = response.json().get("assets", {}).get("items", [])
         if not items:
             break
-        all_favorite_ids.extend([a['id'] for a in items])
+        all_favorite_ids.extend([a["id"] for a in items])
         if len(items) < page_size:
             break
         page += 1
@@ -40,16 +45,16 @@ def get_or_create_album(name):
     albums = response.json()
 
     for album in albums:
-        if album['albumName'] == name:
+        if album["albumName"] == name:
             print(f"Found existing album: '{name}' (ID: {album['id']})")
-            return album['id']
+            return album["id"]
 
     # 2. Create if not found
     print(f"Album '{name}' not found. Creating it...")
     payload = {"albumName": name}
     response = requests.post(f"{IMMICH_URL}/api/albums", headers=HEADERS, json=payload)
     response.raise_for_status()
-    return response.json()['id']
+    return response.json()["id"]
 
 
 def add_assets_to_album(album_id, asset_ids):
@@ -64,7 +69,7 @@ def add_assets_to_album(album_id, asset_ids):
 
     result = response.json()
     # The API typically returns a list of results for each ID
-    success_count = sum(1 for item in result if item.get('success', True))
+    success_count = sum(1 for item in result if item.get("success", True))
     print(f"Successfully added {success_count} assets to the album.")
 
 
@@ -72,7 +77,7 @@ def get_assets_in_album(album_id):
     """Fetches all asset IDs currently in the specified album."""
     response = requests.get(f"{IMMICH_URL}/api/albums/{album_id}", headers=HEADERS)
     response.raise_for_status()
-    return set(asset['id'] for asset in response.json().get('assets', []))
+    return set(asset["id"] for asset in response.json().get("assets", []))
 
 
 def remove_assets_from_album(album_id, asset_ids):
@@ -83,7 +88,7 @@ def remove_assets_from_album(album_id, asset_ids):
     response.raise_for_status()
 
     result = response.json()
-    success_count = sum(1 for item in result if item.get('success', True))
+    success_count = sum(1 for item in result if item.get("success", True))
     print(f"Successfully removed {success_count} assets from the album.")
 
 
@@ -103,6 +108,7 @@ def main():
         add_assets_to_album(album_id, ids_to_add)
     if ids_to_remove:
         remove_assets_from_album(album_id, ids_to_remove)
+
 
 if __name__ == "__main__":
     main()
