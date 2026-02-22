@@ -38,7 +38,7 @@ Open `Favorite_album_sync.py` in a text editor and update the **Configuration** 
 - `IMMICH_URL`: Your Immich server URL (e.g., `http://localhost:2283` or `http://192.168.1.100:2283`).
 - `API_KEY`: Your Immich API Key. You can generate this in the Immich Web UI under **Account Settings > API Keys**.
 - `ALBUM_NAME`: The name of the album to sync favorites to (default: `"Favorites"`).
-- `LOG_FILE_PATH`: Set the file path and name for your log file (default: "favorite_album_sync.log" in same directory as the function)
+- `LOG_FILE_PATH`: Set the file path and name for your log file (default: "favorite_album_sync.log" in same directory as the script)
 
 ### Email Notifications (Optional)
 To receive emails if the script fails, configure the following:
