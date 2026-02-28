@@ -1,4 +1,7 @@
-# Immich Favorite Album Sync
+# DEPRECATED USE Bender8/immich_auto_album INSTEAD!!!
+# THIS FUNCTIONALITY IS NOW INCLUDED IN Bender8/immich_auto_album
+
+## Immich Favorite Album Sync
 
 This tool automatically synchronizes your "Favorite" assets in Immich to a specific album (default: "Favorites"). It ensures that the album always reflects your current favorites by adding new ones and removing those you've unfavorited.
 
